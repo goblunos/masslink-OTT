@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#080b12" />
+  <title>Masslink OTT — Live TV</title>
+
+  <!-- HLS.js enables HLS playback in Chrome/Edge/Firefox.
+       Safari/iOS can usually play HLS natively. -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+
+  <style>
+    :root{
+      --bg:#080b12;
+      --panel:#111725;
+      --panel-2:#151d2d;
+      --text:#f6f8fb;
+      --muted:#98a2b3;
+      --line:rgba(255,255,255,.10);
+      --accent:#ff7a18;
+      --accent2:#ffb15c;
+      --good:#35d07f;
+      --danger:#ff5f5f;
+      --shadow:0 18px 45px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(255,122,24,.12), transparent 32%),
+        radial-gradient(circle at 85% 10%, rgba(77,139,255,.10), transparent 34%),
+        var(--bg);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    button:disabled{cursor:wait;opacity:.65}
+    :focus-visible{outline:3px solid var(--accent2);outline-offset:3px}
+    .app{max-width:1600px;margin:0 auto;padding:18px 22px 64px}
+    .topbar{
+      position:sticky;top:0;z-index:50;
+      display:flex;align-items:center;gap:16px;
+      padding:14px 0 16px;
+      background:linear-gradient(to bottom, rgba(8,11,18,.98), rgba(8,11,18,.88), transparent);
+      backdrop-filter:blur(10px);
+    }
+    .brand{display:flex;align-items:center;gap:12px;min-width:max-content}
+    .brandmark{
+      width:42px;height:42px;border-radius:13px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#101010;font-weight:900;box-shadow:0 10px 28px rgba(255,122,24,.22)
+    }
+    .brandtext strong{display:block;font-size:15px;letter-spacing:.04em}
+    .brandtext span{font-size:12px;color:var(--muted)}
+    .controls{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .search,.select{
+      min-height:42px;border:1px solid var(--line);border-radius:12px;
+      background:rgba(17,23,37,.86);color:var(--text);outline:none;
+    }
+    .search{width:min(340px,42vw);padding:0 14px}
+    .select{padding:0 34px 0 12px}
+    .hero{
+      margin:10px 0 28px;
+      min-height:290px;border:1px solid var(--line);border-radius:26px;
+      display:flex;align-items:flex-end;position:relative;overflow:hidden;
+      background:
+        linear-gradient(90deg, rgba(8,11,18,.98) 0%, rgba(8,11,18,.72) 48%, rgba(8,11,18,.30) 100%),
+        linear-gradient(135deg, #182338, #111722 55%, #24170f);
+      box-shadow:var(--shadow)
+    }
+    .hero::after{
+      content:"";position:absolute;inset:auto -8% -55% auto;width:58%;aspect-ratio:1;border-radius:50%;
+      background:radial-gradient(circle,rgba(255,122,24,.25),transparent 66%);filter:blur(4px)
+    }
+    .hero-copy{position:relative;z-index:2;padding:34px;max-width:780px}
+    .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent2);font-weight:800}
+    h1{font-size:clamp(34px,5vw,72px);line-height:.95;margin:10px 0 14px;letter-spacing:-.04em}
+    .hero p{color:#c6ceda;max-width:720px;line-height:1.6;margin:0 0 18px}
+    .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      min-height:42px;padding:0 16px;border-radius:12px;border:1px solid var(--line);
+      background:#fff;color:#111;font-weight:800
+    }
+    .btn.ghost{background:rgba(255,255,255,.07);color:#fff}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:0 0 14px}
+    .section-head h2{margin:0;font-size:24px;letter-spacing:-.02em}
+    .section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .count{color:var(--muted);font-size:13px;white-space:nowrap}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:16px;
+    }
+    .card{
+      position:relative;overflow:hidden;border-radius:var(--radius);
+      border:1px solid var(--line);background:var(--panel);
+      box-shadow:0 10px 30px rgba(0,0,0,.20);
+      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+      min-width:0;
+    }
+    .card:hover,.card:focus-within{
+      transform:translateY(-3px);border-color:rgba(255,255,255,.22);
+      box-shadow:0 18px 42px rgba(0,0,0,.34)
+    }
+    .media{
+      position:relative;aspect-ratio:16/9;background:#070a0f;overflow:hidden;
+    }
+    .media video{
+      position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#05070b;
+    }
+    .poster{
+      position:absolute;inset:0;display:grid;place-items:center;
+      background:
+        radial-gradient(circle at 70% 20%, rgba(255,122,24,.18), transparent 30%),
+        linear-gradient(145deg,#151d2b,#090d15);
+      transition:opacity .25s ease;
+    }
+    .poster img{max-width:46%;max-height:44%;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(0,0,0,.4))}
+    .poster .initials{
+      width:72px;height:72px;border-radius:22px;display:grid;place-items:center;
+      background:rgba(255,255,255,.08);font-size:26px;font-weight:900
+    }
+    .media.playing .poster{opacity:0;pointer-events:none}
+    .shade{
+      position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(to top,rgba(0,0,0,.70),transparent 48%);
+    }
+    .live{
+      position:absolute;left:12px;top:12px;z-index:4;
+      display:flex;align-items:center;gap:7px;
+      font-size:11px;font-weight:900;letter-spacing:.08em;
+      padding:7px 9px;border-radius:999px;background:rgba(0,0,0,.62);
+      backdrop-filter:blur(7px)
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 4px rgba(255,95,95,.13)}
+    .status{
+      position:absolute;right:12px;top:12px;z-index:4;
+      padding:7px 9px;border-radius:999px;background:rgba(0,0,0,.62);
+      color:#d7deea;font-size:10px;font-weight:800
+    }
+    .play{
+      position:absolute;inset:0;z-index:5;border:0;background:transparent;color:#fff;
+      display:grid;place-items:center;opacity:0;transition:opacity .18s ease;
+    }
+    .card:hover .play,.play:focus{opacity:1}
+    .play span{
+      width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+      background:rgba(255,255,255,.90);color:#111;font-size:20px;
+      box-shadow:0 12px 30px rgba(0,0,0,.35)
+    }
+    .meta{padding:13px 14px 14px}
+    .title{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sub{margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}
+    .sub span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .tag{border:1px solid var(--line);border-radius:999px;padding:4px 7px;color:#b8c1cf}
+    .empty,.error{
+      grid-column:1/-1;padding:32px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);text-align:center
+    }
+    .loadmore{display:flex;justify-content:center;margin-top:24px}
+    .hidden{display:none!important}
+
+    dialog{
+      width:min(1180px,94vw);border:1px solid var(--line);border-radius:22px;
+      padding:0;background:#090d14;color:#fff;box-shadow:0 40px 100px rgba(0,0,0,.72)
+    }
+    dialog::backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(8px)}
+    .modal-media{aspect-ratio:16/9;background:#000;position:relative}
+    .modal-media video{width:100%;height:100%;display:block;background:#000}
+    .modal-close{
+      position:absolute;z-index:10;right:14px;top:14px;width:40px;height:40px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.65);color:#fff;font-size:20px
+    }
+    .modal-info{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 18px 18px}
+    .modal-info strong{display:block;font-size:18px}
+    .modal-info span{color:var(--muted);font-size:13px}
+    .source-note{
+      margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
+      color:#7f8a99;font-size:12px;line-height:1.6
+    }
+
+    @media (max-width:1150px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media (max-width:820px){
+      .topbar{align-items:flex-start;flex-direction:column}
+      .controls{margin-left:0;width:100%;justify-content:stretch}
+      .search{width:100%;flex:1 1 220px}.select{flex:1 1 160px}
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .hero-copy{padding:26px}.hero{min-height:250px}
+    }
+    @media (max-width:520px){
+      .app{padding:12px 12px 48px}.grid{grid-template-columns:1fr;gap:13px}
+      .controls{display:grid;grid-template-columns:1fr}.search,.select{width:100%}
+      .hero-copy{padding:22px}.modal-info{align-items:flex-start;flex-direction:column}
+    }
+    @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brandmark">M</div>
+        <div class="brandtext"><strong>MASSLINK OTT</strong><span>Live television</span></div>
+      </div>
+
+      <div class="controls">
+        <input id="search" class="search" type="search" placeholder="Search channels or countries…" aria-label="Search channels" />
+        <select id="countryFilter" class="select" aria-label="Filter by country">
+          <option value="">All countries</option>
+        </select>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Live now</div>
+        <h1>TV from around the world.</h1>
+        <p>
+          A dynamic OTT landing page built from a live M3U playlist. Every card is 16:9
+          and appears only after its HLS manifest and media delivery pass a live availability check.
+        </p>
+        <div class="hero-actions">
+          <button class="btn" id="jumpLive">Browse Live TV</button>
+         <button class="btn ghost" id="refreshBtn" type="button">Refresh playlist</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="live">
+      <div class="section-head">
+        <div>
+          <h2>Live channels</h2>
+          <p>Only verified live streams are shown. Dead, timed-out, blocked, or non-delivering links are removed automatically.</p>
+        </div>
+         <div id="count" class="count" aria-live="polite">Loading…</div>
+      </div>
+
+      <div id="grid" class="grid" aria-live="polite">
+        <div class="empty">Loading live channels…</div>
+      </div>
+
+      <div class="loadmore">
+        <button id="loadMore" class="btn ghost hidden">Load more channels</button>
+      </div>
+    </section>
+
+    <div class="source-note">
+      Availability is checked at runtime. A channel is displayed only after its HLS manifest resolves
+      and at least one media segment responds successfully. Non-HTTPS, non-HLS, failed, timed-out,
+      CORS-blocked, and non-delivering streams are excluded from the card grid.
+    </div>
+  </main>
+
+  <dialog id="playerDialog" aria-labelledby="modalTitle" aria-describedby="modalMeta">
+    <div class="modal-media">
+      <button id="closeDialog" class="modal-close" aria-label="Close player">×</button>
+      <video id="mainPlayer" controls playsinline></video>
+    </div>
+    <div class="modal-info">
+      <div>
+        <strong id="modalTitle">Channel</strong>
+        <span id="modalMeta"></span>
+      </div>
+        <span id="modalStatus" role="status" aria-live="polite">LIVE</span>
+    </div>
+  </dialog>
+
+  <script>
+    const PLAYLIST_URL = "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8";
+    const PAGE_SIZE = 32;
+    const MAX_ACTIVE_PREVIEWS = 4;
+    const VERIFY_CONCURRENCY = 10;
+    const VERIFY_TIMEOUT_MS = 8000;
+    const PLAYLIST_TIMEOUT_MS = 20000;
+    const HLS_RECOVERY_ATTEMPTS = 2;
+
+    const state = {
+      candidates: [],
+      channels: [],
+      filtered: [],
+      visibleCount: PAGE_SIZE,
+      previewPlayers: new Map(),
+      mainHls: null,
+      checked: 0,
+      rejected: 0,
+      verificationComplete: false,
+      verificationRun: 0,
+      renderTimer: null,
+      failedUrls: new Set(),
+      loading: false
+    };
+
+    const els = {
+      grid: document.getElementById("grid"),
+      search: document.getElementById("search"),
+      country: document.getElementById("countryFilter"),
+      count: document.getElementById("count"),
+      loadMore: document.getElementById("loadMore"),
+      refresh: document.getElementById("refreshBtn"),
+      jumpLive: document.getElementById("jumpLive"),
+      dialog: document.getElementById("playerDialog"),
+      closeDialog: document.getElementById("closeDialog"),
+      player: document.getElementById("mainPlayer"),
+      modalTitle: document.getElementById("modalTitle"),
+      modalMeta: document.getElementById("modalMeta"),
+      modalStatus: document.getElementById("modalStatus")
+    };
+
+    function parseAttrs(line) {
+      const attrs = {};
+      const re = /([\w-]+)="([^"]*)"/g;
+      let m;
+      while ((m = re.exec(line))) attrs[m[1]] = m[2];
+      return attrs;
+    }
+
+    function cleanName(raw) {
+      return (raw || "Untitled channel")
+        .replace(/[ⓈⓉⓎⒼ]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function parseM3U(text) {
+      const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      const out = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        if (!lines[i].startsWith("#EXTINF:")) continue;
+
+        const info = lines[i];
+        const attrs = parseAttrs(info);
+        const comma = info.indexOf(",");
+        const rawName = comma >= 0 ? info.slice(comma + 1).trim() : attrs["tvg-name"];
+        const url = lines[i + 1] || "";
+
+        // Browser-first filtering:
+        // - HTTPS avoids mixed-content failures when your OTT site is on HTTPS.
+        // - Direct .m3u8 URLs work with HLS.js / native HLS.
+        if (!/^https:\/\//i.test(url) || !/\.m3u8(?:[?#]|$)/i.test(url)) continue;
+
+        out.push({
+          id: attrs["tvg-id"] || `${attrs["tvg-country"] || "XX"}-${out.length}`,
+          name: cleanName(attrs["tvg-name"] || rawName),
+          displayName: cleanName(rawName),
+          logo: attrs["tvg-logo"] || "",
+          country: attrs["tvg-country"] || "Other",
+          group: attrs["group-title"] || "Live TV",
+          url
+        });
+      }
+
+      // Keep one playable URL per logical channel id/name.
+      const seen = new Set();
+      return out.filter(ch => {
+        const key = (ch.id || ch.name).toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function withTimeout(ms) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ms);
+      return { controller, clear: () => clearTimeout(timer) };
+    }
+
+    async function fetchManifest(url) {
+      const t = withTimeout(VERIFY_TIMEOUT_MS);
+      try {
+        const res = await fetch(url, {
+          cache: "no-store",
+          redirect: "follow",
+          signal: t.controller.signal,
+          headers: { "Accept": "application/vnd.apple.mpegurl, application/x-mpegURL, text/plain, */*" }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        if (!/^\s*#EXTM3U/m.test(text)) throw new Error("Not an HLS manifest");
+        return { text, finalUrl: res.url || url };
+      } finally {
+        t.clear();
+      }
+    }
+
+    function firstVariantUri(text) {
+      const lines = text.split(/\r?\n/).map(x => x.trim());
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith("#EXT-X-STREAM-INF")) {
+          for (let j = i + 1; j < lines.length; j++) {
+            if (!lines[j]) continue;
+            if (!lines[j].startsWith("#")) return lines[j];
+            break;
+          }
+        }
+      }
+      return null;
+    }
+
+    function firstMediaUri(text) {
+      const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+
+      // Normal HLS media segment URI.
+      for (const line of lines) {
+        if (!line.startsWith("#")) return line;
+      }
+
+      // Low-latency HLS can expose PARTs before a complete segment is listed.
+      for (const line of lines) {
+        if (line.startsWith("#EXT-X-PART:") || line.startsWith("#EXT-X-PRELOAD-HINT:")) {
+          const m = line.match(/URI="([^"]+)"/i);
+          if (m) return m[1];
+        }
+      }
+      return null;
+    }
+
+    async function probeMedia(url) {
+      const t = withTimeout(VERIFY_TIMEOUT_MS);
+      try {
+        // Range is not a CORS-safelisted request header and forces a preflight
+        // on many otherwise playable providers. Fetching headers and cancelling
+        // the body gives us the same availability signal without that penalty.
+        const res = await fetch(url, {
+          method: "GET",
+          cache: "no-store",
+          redirect: "follow",
+          signal: t.controller.signal,
+          headers: { "Accept": "*/*" }
+        });
+        const ok = res.ok;
+        if (res.body) {
+          try { await res.body.cancel(); } catch (_) {}
+        }
+        if (!ok) throw new Error(`Media HTTP ${res.status}`);
+        return true;
+      } finally {
+        t.clear();
+      }
+    }
+
+    async function verifyChannel(ch) {
+      try {
+        let manifest = await fetchManifest(ch.url);
+        let text = manifest.text;
+        let base = manifest.finalUrl;
+
+        // Master playlist: verify a real variant playlist, not just the master file.
+        const variant = firstVariantUri(text);
+        if (variant) {
+          const variantUrl = new URL(variant, base).href;
+          manifest = await fetchManifest(variantUrl);
+          text = manifest.text;
+          base = manifest.finalUrl;
+        }
+
+        const media = firstMediaUri(text);
+        if (!media) throw new Error("No media segment found");
+        const mediaUrl = new URL(media, base).href;
+        await probeMedia(mediaUrl);
+
+        return { ...ch, verifiedAt: Date.now() };
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function updateVerificationStatus() {
+      if (state.verificationComplete) {
+        els.count.textContent = `${state.channels.length.toLocaleString()} verified live • ${state.rejected.toLocaleString()} unavailable removed`;
+      } else {
+        els.count.textContent = `${state.channels.length.toLocaleString()} verified • ${state.checked.toLocaleString()}/${state.candidates.length.toLocaleString()} checked`;
+      }
+    }
+
+    function removeUnavailableChannel(ch) {
+      if (!ch || !ch.url || state.failedUrls.has(ch.url)) return;
+      const existed = state.channels.some(item => item.url === ch.url);
+      state.failedUrls.add(ch.url);
+      if (!existed) return;
+
+      state.channels = state.channels.filter(item => item.url !== ch.url);
+      state.rejected += 1;
+      buildCountries();
+      applyFilters(false);
+      updateVerificationStatus();
+    }
+
+    function scheduleVerifiedRender(force = false) {
+      if (state.renderTimer) clearTimeout(state.renderTimer);
+      const run = () => {
+        state.renderTimer = null;
+        buildCountries();
+        applyFilters(false);
+        updateVerificationStatus();
+      };
+      if (force) run();
+      else state.renderTimer = setTimeout(run, 350);
+    }
+
+    async function verifyAllChannels(candidates, runId) {
+      let cursor = 0;
+
+      async function worker() {
+        while (true) {
+          if (runId !== state.verificationRun) return;
+          const i = cursor++;
+          if (i >= candidates.length) return;
+
+          const verified = await verifyChannel(candidates[i]);
+          if (runId !== state.verificationRun) return;
+
+          state.checked += 1;
+          if (verified) state.channels.push(verified);
+          else state.rejected += 1;
+
+          if (verified || state.checked % 10 === 0) scheduleVerifiedRender();
+          else updateVerificationStatus();
+        }
+      }
+
+      await Promise.all(Array.from({ length: VERIFY_CONCURRENCY }, worker));
+      if (runId !== state.verificationRun) return;
+
+      state.verificationComplete = true;
+      scheduleVerifiedRender(true);
+
+      if (!state.channels.length) {
+        els.grid.innerHTML = `
+          <div class="error">
+            No streams passed the live HLS verification from this browser/network.<br><br>
+            This can happen when providers are offline, geo-restricted, or do not allow cross-origin playback.
+          </div>`;
+      }
+    }
+
+    async function loadPlaylist() {
+      state.verificationRun += 1;
+      const runId = state.verificationRun;
+      state.loading = true;
+      els.refresh.disabled = true;
+      els.refresh.textContent = "Refreshing…";
+      shutdownAllPreviews();
+      shutdownMainPlayer();
+      state.candidates = [];
+      state.channels = [];
+      state.filtered = [];
+      state.checked = 0;
+      state.rejected = 0;
+      state.verificationComplete = false;
+      state.failedUrls = new Set();
+      state.visibleCount = PAGE_SIZE;
+      if (state.renderTimer) clearTimeout(state.renderTimer);
+
+      els.grid.innerHTML = '<div class="empty">Loading playlist and verifying live streams…</div>';
+      els.count.textContent = "Loading playlist…";
+      els.loadMore.classList.add("hidden");
+
+      try {
+        const request = withTimeout(PLAYLIST_TIMEOUT_MS);
+        let res;
+        try {
+          res = await fetch(PLAYLIST_URL, {
+            cache: "no-store",
+            signal: request.controller.signal
+          });
+        } finally {
+          request.clear();
+        }
+        if (!res.ok) throw new Error(`Playlist request failed (${res.status})`);
+        const text = await res.text();
+        if (runId !== state.verificationRun) return;
+        state.candidates = parseM3U(text);
+
+        if (!state.candidates.length) {
+          throw new Error("No HTTPS HLS streams were found in the playlist.");
+        }
+
+        els.grid.innerHTML = '<div class="empty">Checking HLS manifests and media delivery… verified channels will appear automatically.</div>';
+        updateVerificationStatus();
+        void verifyAllChannels(state.candidates, runId).catch(err => {
+          if (runId !== state.verificationRun) return;
+          console.error(err);
+          state.verificationComplete = true;
+          els.grid.innerHTML = `
+            <div class="error">
+              Verification stopped unexpectedly.<br><br>
+              <strong>${escapeHtml(err.message || "Unknown verification error")}</strong>
+            </div>`;
+          updateVerificationStatus();
+        });
+      } catch (err) {
+        if (runId !== state.verificationRun) return;
+        console.error(err);
+        els.grid.innerHTML = `
+          <div class="error">
+            Could not load the live playlist.<br><br>
+            <strong>${escapeHtml(err.name === "AbortError" ? "The playlist request timed out." : err.message)}</strong><br><br>
+            Check the network connection and try refreshing the playlist.
+          </div>`;
+        els.count.textContent = "Unavailable";
+      } finally {
+        if (runId === state.verificationRun) {
+          state.loading = false;
+          els.refresh.disabled = false;
+          els.refresh.textContent = "Refresh playlist";
+        }
+      }
+    }
+
+    function buildCountries() {
+      const current = els.country.value;
+      const countries = [...new Set(state.channels.map(c => c.country).filter(Boolean))].sort();
+      els.country.innerHTML = '<option value="">All countries</option>' +
+        countries.map(c => `<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join("");
+      if (countries.includes(current)) els.country.value = current;
+    }
+
+    function applyFilters(resetVisible = true) {
+      const q = els.search.value.trim().toLowerCase();
+      const country = els.country.value;
+
+      state.filtered = state.channels.filter(ch => {
+        const hay = `${ch.name} ${ch.displayName} ${ch.country} ${ch.group}`.toLowerCase();
+        return (!q || hay.includes(q)) && (!country || ch.country === country);
+      });
+
+      if (resetVisible) state.visibleCount = PAGE_SIZE;
+      render();
+    }
+
+    function render() {
+      shutdownAllPreviews();
+
+      const rows = state.filtered.slice(0, state.visibleCount);
+      updateVerificationStatus();
+
+      if (!rows.length) {
+        els.grid.innerHTML = state.verificationComplete
+          ? '<div class="empty">No verified live channels match your current filter.</div>'
+          : '<div class="empty">Verifying streams… live channels will appear here as they pass.</div>';
+        els.loadMore.classList.add("hidden");
+        return;
+      }
+
+      els.grid.innerHTML = rows.map((ch, index) => `
+        <article class="card" data-index="${index}">
+          <div class="media" data-media>
+            <video muted playsinline preload="none" data-preview></video>
+
+            <div class="poster">
+              ${ch.logo
+                ? `<img src="${escapeAttr(ch.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+                : `<div class="initials">${escapeHtml(initials(ch.name))}</div>`
+              }
+            </div>
+
+            <div class="shade"></div>
+            <div class="live"><i class="dot"></i>LIVE</div>
+            <div class="status" data-status style="color:var(--good)">VERIFIED</div>
+
+            <button class="play" data-play aria-label="Play ${escapeAttr(ch.name)} live">
+              <span>▶</span>
+            </button>
+          </div>
+
+          <div class="meta">
+            <div class="title" title="${escapeAttr(ch.name)}">${escapeHtml(ch.name)}</div>
+            <div class="sub">
+              <span>${escapeHtml(ch.group)}</span>
+              <span class="tag">${escapeHtml(ch.country)}</span>
+            </div>
+          </div>
+        </article>
+      `).join("");
+
+      [...els.grid.querySelectorAll(".card")].forEach((card, index) => {
+        const ch = rows[index];
+        const button = card.querySelector("[data-play]");
+        button.addEventListener("click", () => openPlayer(ch));
+
+        // Explicit hover/focus gives the user a fast live preview even when
+        // the concurrency limiter has not selected this card automatically.
+        card.addEventListener("mouseenter", () => startPreview(card, ch));
+        card.addEventListener("mouseleave", () => {
+          // Let IntersectionObserver decide if a visible card should remain live.
+          if (!card.dataset.autoLive) stopPreview(card);
+        });
+        card.addEventListener("focusin", () => startPreview(card, ch));
+      });
+
+      setupPreviewObserver(rows);
+
+      els.loadMore.classList.toggle("hidden", state.visibleCount >= state.filtered.length);
+    }
+
+    let observer;
+    function setupPreviewObserver(rows) {
+      if (observer) observer.disconnect();
+
+      if (!("IntersectionObserver" in window)) {
+        els.grid.querySelectorAll(".card").forEach(card => {
+          card.dataset.autoLive = "1";
+        });
+        rebalancePreviews(rows);
+        return;
+      }
+
+      observer = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          const card = entry.target;
+          const index = Number(card.dataset.index);
+          const ch = rows[index];
+          if (!ch) continue;
+
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.65) {
+            card.dataset.autoLive = "1";
+            rebalancePreviews(rows);
+          } else {
+            delete card.dataset.autoLive;
+            stopPreview(card);
+            rebalancePreviews(rows);
+          }
+        }
+      }, { threshold: [0, .65, 1] });
+
+      els.grid.querySelectorAll(".card").forEach(card => observer.observe(card));
+    }
+
+    function rebalancePreviews(rows) {
+      const candidates = [...els.grid.querySelectorAll('.card[data-auto-live="1"]')]
+        .slice(0, MAX_ACTIVE_PREVIEWS);
+
+      const keep = new Set(candidates);
+      for (const card of [...state.previewPlayers.keys()]) {
+        if (!keep.has(card)) stopPreview(card);
+      }
+
+      for (const card of candidates) {
+        const index = Number(card.dataset.index);
+        const ch = rows[index];
+        if (ch) startPreview(card, ch);
+      }
+    }
+
+    function startPreview(card, ch) {
+      if (state.previewPlayers.has(card)) return;
+
+      // Keep automatic bandwidth bounded.
+      if (state.previewPlayers.size >= MAX_ACTIVE_PREVIEWS && !card.matches(":hover, :focus-within")) return;
+
+      const video = card.querySelector("[data-preview]");
+      const media = card.querySelector("[data-media]");
+      const status = card.querySelector("[data-status]");
+      status.textContent = "CONNECTING";
+
+      const onPlaying = () => {
+        media.classList.add("playing");
+        status.textContent = "LIVE";
+        status.style.color = "var(--good)";
+      };
+      const onError = () => {
+        // A preview can fail because of a transient network error or a
+        // browser-specific codec issue. Do not remove a verified channel from
+        // the catalog based on one hover preview.
+        status.textContent = "RETRY";
+        status.style.color = "var(--danger)";
+      };
+
+      video.addEventListener("playing", onPlaying, { once: true });
+      video.addEventListener("error", onError, { once: true });
+
+      const record = { video, hls: null };
+      state.previewPlayers.set(card, record);
+
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = ch.url;
+        video.play().catch(() => {});
+      } else if (window.Hls && Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          maxBufferLength: 12,
+          maxMaxBufferLength: 20,
+          capLevelToPlayerSize: true
+        });
+        record.hls = hls;
+        hls.loadSource(ch.url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+        attachHlsRecovery(hls, onError);
+      } else {
+        onError();
+      }
+    }
+
+    function stopPreview(card) {
+      const record = state.previewPlayers.get(card);
+      if (!record) return;
+
+      const media = card.querySelector("[data-media]");
+      const status = card.querySelector("[data-status]");
+
+      try { record.video.pause(); } catch(e) {}
+      if (record.hls) {
+        try { record.hls.destroy(); } catch(e) {}
+      }
+      record.video.removeAttribute("src");
+      try { record.video.load(); } catch(e) {}
+
+      media.classList.remove("playing");
+      status.textContent = "VERIFIED";
+      status.style.color = "var(--good)";
+      state.previewPlayers.delete(card);
+    }
+
+    function shutdownAllPreviews() {
+      if (observer) observer.disconnect();
+      for (const card of [...state.previewPlayers.keys()]) stopPreview(card);
+    }
+
+    function attachHlsRecovery(hls, onFailure) {
+      let attempts = 0;
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (!data || !data.fatal) return;
+
+        const errorTypes = Hls.ErrorTypes || {};
+        if (attempts < HLS_RECOVERY_ATTEMPTS &&
+            data.type === errorTypes.NETWORK_ERROR) {
+          attempts += 1;
+          hls.startLoad();
+          return;
+        }
+
+        if (attempts < HLS_RECOVERY_ATTEMPTS &&
+            data.type === errorTypes.MEDIA_ERROR) {
+          attempts += 1;
+          hls.recoverMediaError();
+          return;
+        }
+
+        onFailure();
+      });
+    }
+
+    function openPlayer(ch) {
+      shutdownAllPreviews();
+      shutdownMainPlayer();
+      els.modalTitle.textContent = ch.name;
+      els.modalMeta.textContent = `${ch.group} • ${ch.country}`;
+      els.modalStatus.textContent = "CONNECTING…";
+      if (!els.dialog.open) els.dialog.showModal();
+
+      const video = els.player;
+      video.muted = false;
+      video.autoplay = true;
+
+      const markLive = () => els.modalStatus.textContent = "LIVE";
+      const markError = () => {
+        els.modalStatus.textContent = "PLAYBACK UNAVAILABLE — TRY AGAIN";
+      };
+
+      video.addEventListener("playing", markLive, { once:true });
+      video.addEventListener("error", markError, { once:true });
+
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = ch.url;
+        video.play().catch(() => {});
+      } else if (window.Hls && Hls.isSupported()) {
+        state.mainHls = new Hls({
+          enableWorker:true,
+          lowLatencyMode:true,
+          capLevelToPlayerSize:true
+        });
+        state.mainHls.loadSource(ch.url);
+        state.mainHls.attachMedia(video);
+        state.mainHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+        attachHlsRecovery(state.mainHls, markError);
+      } else {
+        markError();
+      }
+    }
+
+    function shutdownMainPlayer() {
+      try { els.player.pause(); } catch(e) {}
+      if (state.mainHls) {
+        try { state.mainHls.destroy(); } catch(e) {}
+        state.mainHls = null;
+      }
+      els.player.removeAttribute("src");
+      try { els.player.load(); } catch(e) {}
+    }
+
+    function closeDialog() {
+      shutdownMainPlayer();
+      if (els.dialog.open) els.dialog.close();
+      // Rebuild the live previews after modal closes.
+      const rows = state.filtered.slice(0, state.visibleCount);
+      setupPreviewObserver(rows);
+      rebalancePreviews(rows);
+    }
+
+    function initials(name) {
+      return name.split(/\s+/).slice(0,2).map(x => x[0] || "").join("").toUpperCase();
+    }
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+    function escapeAttr(s) { return escapeHtml(s); }
+
+    els.search.addEventListener("input", applyFilters);
+    els.country.addEventListener("change", applyFilters);
+    els.refresh.addEventListener("click", loadPlaylist);
+    els.jumpLive.addEventListener("click", () => document.getElementById("live").scrollIntoView({behavior:"smooth"}));
+
+    els.loadMore.addEventListener("click", () => {
+      state.visibleCount += PAGE_SIZE;
+      render();
+    });
+
+    els.closeDialog.addEventListener("click", closeDialog);
+    els.dialog.addEventListener("click", e => {
+      if (e.target === els.dialog) closeDialog();
+    });
+    els.dialog.addEventListener("cancel", e => {
+      e.preventDefault();
+      closeDialog();
+    });
+
+    loadPlaylist();
+  </script>
+</body>
+</html>
