@@ -14,7 +14,7 @@ interface ChannelGridProps {
 export function ChannelGrid({ onPlayChannel }: ChannelGridProps) {
   const [search, setSearch] = useState("")
   const [country, setCountry] = useState("all")
-  const [visibleCount, setVisibleCount] = useState(8)
+  const [visibleCount, setVisibleCount] = useState(32)
   
   // Debounce search slightly
   const [debouncedSearch, setDebouncedSearch] = useState("")
@@ -24,7 +24,7 @@ export function ChannelGrid({ onPlayChannel }: ChannelGridProps) {
     return () => clearTimeout(timer)
   }, [search])
 
-  React.useEffect(() => setVisibleCount(8), [debouncedSearch, country])
+  React.useEffect(() => setVisibleCount(32), [debouncedSearch, country])
 
   const params = {
     search: debouncedSearch || undefined,
@@ -50,26 +50,24 @@ export function ChannelGrid({ onPlayChannel }: ChannelGridProps) {
   }, [])
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[1400px] mx-auto pb-20 pt-6">
+    <div className="flex flex-col gap-6 w-full mx-auto pb-8">
       
       {/* Hero / Filter Section */}
-      <div className="bg-card/40 border border-border/50 rounded-2xl p-6 backdrop-blur-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none transform translate-x-1/2 -translate-y-1/2" />
-        
-        <div className="flex flex-col md:flex-row gap-4 relative z-10">
+      <div className="relative overflow-hidden">
+        <div className="flex flex-col md:flex-row gap-3 relative z-10">
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input 
               placeholder="Search channels, networks, or categories..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-11 h-12 bg-background border-border/60 focus-visible:ring-primary shadow-inner text-base"
+              className="pl-11 h-[42px] bg-card/85 border-white/10 focus-visible:ring-orange-300 text-sm rounded-xl"
             />
           </div>
           
           <div className="w-full md:w-64">
             <Select value={country} onValueChange={setCountry}>
-              <SelectTrigger className="h-12 bg-background border-border/60">
+              <SelectTrigger className="h-[42px] bg-card/85 border-white/10 rounded-xl">
                 <div className="flex items-center gap-2">
                   <Globe2 className="h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder="All Countries" />
@@ -86,11 +84,14 @@ export function ChannelGrid({ onPlayChannel }: ChannelGridProps) {
       </div>
 
       {/* Grid Status & Content */}
-      <div className="flex justify-between items-end mb-2 gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">
+      <div className="flex justify-between items-end mb-0 gap-4">
+        <div>
+        <h2 className="text-2xl font-extrabold tracking-tight">
           {debouncedSearch ? "Search Results" : "Live Channels"}
           {channels && <span className="ml-3 text-sm font-normal text-muted-foreground">{channels.length} channels available</span>}
         </h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">Select a verified stream and use CC in the player for native or AI captions.</p>
+        </div>
         <Button variant="ghost" size="sm" onClick={() => refetch()} aria-label="Refresh channel directory">
           <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
           Refresh
@@ -98,7 +99,7 @@ export function ChannelGrid({ onPlayChannel }: ChannelGridProps) {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="rounded-xl bg-card border border-border/30 overflow-hidden h-[280px] animate-pulse flex flex-col">
               <div className="aspect-video bg-background/50" />
@@ -132,7 +133,7 @@ export function ChannelGrid({ onPlayChannel }: ChannelGridProps) {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {channels?.slice(0, visibleCount).map(channel => (
             <ChannelCard 
               key={channel.id} 
@@ -142,7 +143,7 @@ export function ChannelGrid({ onPlayChannel }: ChannelGridProps) {
           ))}
           {channels && visibleCount < channels.length && (
             <div className="col-span-full flex justify-center pt-6">
-              <Button onClick={() => setVisibleCount((count) => count + 8)} size="lg">
+              <Button onClick={() => setVisibleCount((count) => count + 32)} size="lg" variant="outline">
                 Load more channels
               </Button>
             </div>

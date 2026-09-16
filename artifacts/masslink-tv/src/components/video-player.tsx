@@ -350,7 +350,7 @@ export function VideoPlayer({ channel, onClose }: VideoPlayerProps) {
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col md:flex-row animate-in fade-in duration-300"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-lg flex flex-col md:flex-row items-center justify-center gap-0 p-3 md:p-8 animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-label={`Live stream of ${channel.name}`}
@@ -359,8 +359,8 @@ export function VideoPlayer({ channel, onClose }: VideoPlayerProps) {
       <div 
         ref={containerRef} 
         className={cn(
-          "relative flex-1 bg-black flex flex-col justify-center overflow-hidden",
-          isFullscreen ? "h-screen w-screen" : "h-full"
+          "relative bg-black flex flex-col justify-center overflow-hidden border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,.72)]",
+          isFullscreen ? "h-screen w-screen" : "w-full max-w-[1180px] aspect-video rounded-[22px]"
         )}
       >
         {status === "loading" && (
@@ -391,7 +391,7 @@ export function VideoPlayer({ channel, onClose }: VideoPlayerProps) {
 
         <video
           ref={videoRef}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain rounded-[22px]"
           playsInline
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
@@ -505,7 +505,7 @@ export function VideoPlayer({ channel, onClose }: VideoPlayerProps) {
 
       {/* Transcript Panel */}
       {showTranscript && !isFullscreen && (
-        <div className="w-full md:w-[350px] lg:w-[400px] h-[40vh] md:h-full bg-card border-t md:border-t-0 md:border-l border-border/50 flex flex-col z-20">
+          <div className="w-full md:w-[350px] lg:w-[400px] h-[40vh] md:h-[min(66.4vw,664px)] bg-card border border-white/10 border-t-0 md:border-t md:border-l-0 flex flex-col z-20 rounded-b-[22px] md:rounded-b-none md:rounded-r-[22px] overflow-hidden">
           <div className="p-4 border-b border-border/50 flex justify-between items-center bg-background/50">
             <h3 className="font-semibold flex items-center gap-2 text-white">
               <MessageSquareText className="h-4 w-4 text-primary" aria-hidden="true" />
