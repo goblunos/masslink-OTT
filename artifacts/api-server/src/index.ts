@@ -1,5 +1,4 @@
 import app from "./app";
-import { cleanupExpired } from "./lib/caption-sessions";
 import { logger } from "./lib/logger";
 
 const rawPort = process.env["PORT"];
@@ -24,5 +23,3 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 });
-
-setInterval(cleanupExpired, 60_000).unref();

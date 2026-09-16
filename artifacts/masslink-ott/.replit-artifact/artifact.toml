@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Masslink OTT"
+description = "A live television web app that discovers, verifies, filters, previews, and plays HLS channels from around the world."
+version = "1.0.0"
+id = "artifacts/masslink-ott"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20169
+
+[services.development]
+run = "pnpm --filter @workspace/masslink-ott run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/masslink-ott", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/masslink-ott/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20169"
+BASE_PATH = "/"
