@@ -1,17 +1,15 @@
-# Masslink OTT
+# [Project name]
 
-A global live-TV web app with verified HLS playback, native captions, and opt-in backend AI live subtitles.
+_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm --filter @workspace/masslink-tv run dev` — run the web viewer through its managed workflow
-- `pnpm --filter @workspace/api-server test` — playback and caption lifecycle tests
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- ElevenLabs is accessed through the connected Replit integration; caption tuning is documented in `MASSLINK_SETUP.md`
+- Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
@@ -24,22 +22,15 @@ A global live-TV web app with verified HLS playback, native captions, and opt-in
 
 ## Where things live
 
-- Web viewer: `artifacts/masslink-tv`
-- Channel and caption API: `artifacts/api-server/src/routes`
-- Trusted channel catalog: `artifacts/api-server/src/lib/channel-catalog.ts`
-- Caption session manager: `artifacts/api-server/src/lib/caption-sessions.ts`
-- API contract: `lib/api-spec/openapi.yaml`
+_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
 
 ## Architecture decisions
 
-- AI captions are opt-in and short-lived; no transcription starts before CC is enabled.
-- Native HLS tracks take priority over AI captions.
-- The backend resolves stream URLs from the trusted catalog to prevent SSRF.
-- Caption audio and cues are ephemeral, bounded, and removed when a session stops.
+_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
 
 ## Product
 
-Search and filter global channels, preview verified streams, play HLS in a modal, select native captions, or enable AI live captions with language detection and a transcript.
+_Describe the high-level user-facing capabilities of this app once they exist._
 
 ## User preferences
 
@@ -47,9 +38,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-- Replace sample HLS entries with licensed streams before public launch.
-- Keep caption cleanup tied to CC disable, player close, stream changes, and expiry.
-- See `MASSLINK_SETUP.md` for rate limits, concurrency, and provider fallback.
+_Populate as you build — sharp edges, "always run X before Y" rules._
 
 ## Pointers
 

@@ -7,6 +7,12 @@
  */
 
 export type ListChannelsParams = {
+/**
+ * @maxLength 120
+ */
 search?: string;
+/**
+ * @maxLength 80
+ */
 country?: string;
 };

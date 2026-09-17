@@ -20,9 +20,15 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List live channels
  */
+export const listChannelsQuerySearchMax = 120;
+
+export const listChannelsQueryCountryMax = 80;
+
+
+
 export const ListChannelsQueryParams = zod.object({
-  "search": zod.coerce.string().optional(),
-  "country": zod.coerce.string().optional()
+  "search": zod.coerce.string().max(listChannelsQuerySearchMax).optional(),
+  "country": zod.coerce.string().max(listChannelsQueryCountryMax).optional()
 })
 
 export const ListChannelsResponseItem = zod.object({
@@ -64,10 +70,18 @@ export const VerifyChannelResponse = zod.object({
 /**
  * @summary Start an opt-in AI caption session
  */
+export const startCaptionSessionBodyChannelIdMax = 200;
+
+export const startCaptionSessionBodyLanguageMax = 20;
+
+
+export const startCaptionSessionBodyLanguageRegExp = new RegExp('^(auto|[A-Za-z]{2,8})$');
+
+
 export const StartCaptionSessionBody = zod.object({
-  "channelId": zod.string(),
-  "streamUrl": zod.string().url(),
-  "language": zod.string().describe('Use auto for automatic detection')
+  "channelId": zod.string().min(1).max(startCaptionSessionBodyChannelIdMax),
+  "streamUrl": zod.string().url().describe('Retained for client compatibility; the server resolves the stream from its trusted catalog.'),
+  "language": zod.string().max(startCaptionSessionBodyLanguageMax).regex(startCaptionSessionBodyLanguageRegExp).describe('Use auto for automatic detection')
 })
 
 export const StartCaptionSessionResponse = zod.object({
@@ -115,8 +129,8 @@ export const ListCaptionCuesResponseItem = zod.object({
   "id": zod.number().int(),
   "startMs": zod.number().int(),
   "endMs": zod.number().int(),
-  "text": zod.string(),
-  "language": zod.string(),
+  "text": zod.string().describe('English translation of the spoken cue'),
+  "language": zod.string().describe('Always en for live caption cues'),
   "final": zod.boolean()
 })
 export const ListCaptionCuesResponse = zod.array(ListCaptionCuesResponseItem)

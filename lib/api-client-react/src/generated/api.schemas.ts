@@ -39,9 +39,18 @@ export interface StreamVerification {
 }
 
 export interface CaptionSessionInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
   channelId: string;
+  /** Retained for client compatibility; the server resolves the stream from its trusted catalog. */
   streamUrl: string;
-  /** Use auto for automatic detection */
+  /**
+     * Use auto for automatic detection
+     * @maxLength 20
+     * @pattern ^(auto|[A-Za-z]{2,8})$
+     */
   language: string;
 }
 
@@ -75,13 +84,21 @@ export interface CaptionCue {
   id: number;
   startMs: number;
   endMs: number;
+  /** English translation of the spoken cue */
   text: string;
+  /** Always en for live caption cues */
   language: string;
   final: boolean;
 }
 
 export type ListChannelsParams = {
+/**
+ * @maxLength 120
+ */
 search?: string;
+/**
+ * @maxLength 80
+ */
 country?: string;
 };
 

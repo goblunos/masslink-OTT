@@ -1,0 +1,2 @@
+- [Permanent channel catalog](channel-catalog.md) — retain a fixed lineup; verification must cover the full source, not an arbitrary early sample.
+- [English live captions](english-captions.md) — English is the requested output language; transcription language must remain auto-detected.

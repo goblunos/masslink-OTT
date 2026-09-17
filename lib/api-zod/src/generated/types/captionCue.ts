@@ -10,7 +10,9 @@ export interface CaptionCue {
   id: number;
   startMs: number;
   endMs: number;
+  /** English translation of the spoken cue */
   text: string;
+  /** Always en for live caption cues */
   language: string;
   final: boolean;
 }

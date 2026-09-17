@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Playwright generated reports and traces
+/artifacts/masslink-ott/playwright-report/
+/artifacts/masslink-ott/test-results/

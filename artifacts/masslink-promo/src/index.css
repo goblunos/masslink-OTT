@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap');
+@import 'tailwindcss';
+
+/* Masslink OTT brand palette */
+:root {
+  --color-night: #080b12;
+  --color-panel: #111725;
+  --color-panel-deep: #0d121d;
+  --color-panel-raised: #151d2d;
+  --color-ink: #f6f8fb;
+  --color-muted-ink: #98a2b3;
+  --color-orange: #ff7a18;
+  --color-peach: #ffb15c;
+  --color-mint: #35d07f;
+  --color-red: #ff5f5f;
+
+  --font-sans: 'DM Sans', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+@theme inline {
+  --color-night: var(--color-night);
+  --color-panel: var(--color-panel);
+  --color-panel-deep: var(--color-panel-deep);
+  --color-panel-raised: var(--color-panel-raised);
+  --color-ink: var(--color-ink);
+  --color-muted-ink: var(--color-muted-ink);
+  --color-orange: var(--color-orange);
+  --color-peach: var(--color-peach);
+  --color-mint: var(--color-mint);
+  --color-red: var(--color-red);
+  
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-night);
+  color: var(--color-ink);
+}
+
+.video-media-frame {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.video-media-frame > :is(img, video) {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+}
+
+.video-media-frame[data-media-fit='contain'] > :is(img, video) {
+  object-fit: contain;
+}
+
+.video-media-frame[data-media-position='top'] > :is(img, video) {
+  object-position: top;
+}
+
+.video-media-frame[data-media-position='right'] > :is(img, video) {
+  object-position: right;
+}
+
+.video-media-frame[data-media-position='bottom'] > :is(img, video) {
+  object-position: bottom;
+}
+
+.video-media-frame[data-media-position='left'] > :is(img, video) {
+  object-position: left;
+}

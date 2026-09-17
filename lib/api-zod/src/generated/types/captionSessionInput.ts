@@ -7,8 +7,17 @@
  */
 
 export interface CaptionSessionInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
   channelId: string;
+  /** Retained for client compatibility; the server resolves the stream from its trusted catalog. */
   streamUrl: string;
-  /** Use auto for automatic detection */
+  /**
+     * Use auto for automatic detection
+     * @maxLength 20
+     * @pattern ^(auto|[A-Za-z]{2,8})$
+     */
   language: string;
 }

@@ -36,10 +36,10 @@ paths:
       parameters:
         - in: query
           name: search
-          schema: { type: string }
+          schema: { type: string, maxLength: 120 }
         - in: query
           name: country
-          schema: { type: string }
+          schema: { type: string, maxLength: 80 }
       responses:
         "200":
           description: Channel catalog
@@ -171,9 +171,16 @@ components:
       type: object
       required: [channelId, streamUrl, language]
       properties:
-        channelId: { type: string }
-        streamUrl: { type: string, format: uri }
-        language: { type: string, description: Use auto for automatic detection }
+        channelId: { type: string, minLength: 1, maxLength: 200 }
+        streamUrl:
+          type: string
+          format: uri
+          description: Retained for client compatibility; the server resolves the stream from its trusted catalog.
+        language:
+          type: string
+          maxLength: 20
+          pattern: '^(auto|[A-Za-z]{2,8})$'
+          description: Use auto for automatic detection
     CaptionSession:
       type: object
       required: [id, channelId, status, language, createdAt, expiresAt, cueCount]
@@ -196,7 +203,7 @@ components:
         id: { type: integer }
         startMs: { type: integer }
         endMs: { type: integer }
-        text: { type: string }
-        language: { type: string }
+        text: { type: string, description: English translation of the spoken cue }
+        language: { type: string, description: Always en for live caption cues }
         final: { type: boolean }
 

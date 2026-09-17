@@ -1,0 +1,29 @@
+kind = "video"
+videoAspectRatio = "16:9"
+previewPath = "/masslink-promo/"
+title = "Masslink OTT Promo"
+description = "An animated promotional video showcasing Masslink OTT’s permanent 910-channel catalog, global filtering, live playback, and English AI-translated captions."
+version = "1.0.0"
+id = "artifacts/masslink-promo"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/masslink-promo/" ]
+localPort = 18428
+
+[services.development]
+run = "pnpm --filter @workspace/masslink-promo run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/masslink-promo", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/masslink-promo/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18428"
+BASE_PATH = "/masslink-promo/"
